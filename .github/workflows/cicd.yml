@@ -82,4 +82,4 @@ jobs:
       - name: Deploy to AWS
         run: |
           terraform init
-          terraform destroy -auto-approve
+          terraform apply -auto-approve

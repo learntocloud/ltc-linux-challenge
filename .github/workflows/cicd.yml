@@ -1,0 +1,85 @@
+name: cicd workflow
+
+on:
+  # Triggers the workflow on push request event but only for the "main" branch
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  id-token: write
+  contents: read
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  plan:
+    # The type of runner that the job will run on
+    name: Terraform plan
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4.0.4
+        with:
+          node-version: 20
+
+      - name: Hashicorp - Terraform setup
+        uses: hashicorp/setup-terraform@v3.1.2
+
+      # To speed up the workflow, we cache the .terraform directory and terrraform providers
+      # To avoid redownloading the providers everytime the workflow runs
+      - name: Cache Terraform providers
+        uses: terraform-cache/terraform-cache@v1
+
+      - name: Configure AWS Credentials for github actions
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        with:
+          audience: sts.amazonaws.com
+          aws-region: ${{secrets.AWS_REGION}}
+          role-to-assume: ${{secrets.ROLE_TO_ASSUME}} #change to reflect IAM role’s ARN
+
+      # Runs a set of terraform commands using the runners shell
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: |
+          terraform fmt -recursive
+          terraform validate
+        continue-on-error: false
+
+      - name: Terraform Plan
+        run: terraform plan
+
+  deploy:
+    name: Terraform apply
+    needs: plan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4.0.4
+        with:
+          node-version: 20
+
+      - name: Configure AWS Credentials for github actions
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        with:
+          audience: sts.amazonaws.com
+          aws-region: ${{secrets.AWS_REGION}}
+          role-to-assume: ${{secrets.ROLE_TO_ASSUME}}
+
+      - name: Deploy to AWS
+        run: |
+          terraform init
+          terraform destroy -auto-approve

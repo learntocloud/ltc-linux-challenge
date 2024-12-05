@@ -50,6 +50,7 @@ echo "CTF{permission_granted}" | sudo tee /root/everyone_can_access_me
 sudo chmod 777 /root/everyone_can_access_me
 
 # Challenge 6: Process running on port 8080
+sudo yum install -y nmap-ncat
 echo '#!/bin/bash
 while true; do
     echo -e "HTTP/1.1 200 OK\n\nCTF{port_explorer}" | nc -l -p 8080

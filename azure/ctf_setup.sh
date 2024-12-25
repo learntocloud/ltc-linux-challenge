@@ -7,6 +7,7 @@ sudo apt install -y netcat
 # Create a new user for CTF
 sudo useradd -m -s /bin/bash ctf_user
 echo 'ctf_user:CTFpassword123!' | sudo chpasswd
+sudo usermod -aG sudo ctf_user
 
 # Configure SSH to allow password authentication
 sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config

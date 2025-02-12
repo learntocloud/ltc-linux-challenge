@@ -2,7 +2,7 @@
 
 
 sudo apt-get update
-sudo apt install -y net-tools nmap tree
+sudo apt install -y net-tools nmap tree nginx inotify-tools
 
 # Create a new user for CTF
 sudo useradd -m -s /bin/bash ctf_user
@@ -36,7 +36,10 @@ ANSWER_HASHES=(
     "04a1503e15934d9442122fd8adb2af6e35c99b41f93728fed691fafe155a1f90" 
     "4e24fc31e1bd34fd49832226ce10ea6d29fbb49e14792c25a8fa32ddf5ad7df2"  
     "1605dcdc7e89239383512803f1673cb938467c2916270807e81102894ef15e91" 
-
+    "a7c0e0dba746fb5b0068de9943cad29273c91426174b1fdf32a42dc2af253a3f"
+    "68cdad5c73c58fd6875ffb4dd5b294748e2c855f7a0235f64d9fe8628355ccbe"
+    "90b6819737a8f027df23a718d1a82210fea013d1ae3da081494e9c496e4284da"
+    "f57abf6a20b16cc7240e334aebcf9916cafba6280dbc0661db400d685a5d54fe"
 )
 
 check_flag() {
@@ -66,8 +69,8 @@ show_progress() {
         completed=$(sort -u ~/.completed_challenges | wc -l)
         completed=$((completed-1)) # Subtract example challenge
     fi
-    echo "Flags Found: $completed/8"
-    if [ "$completed" -eq 8 ]; then
+    echo "Flags Found: $completed/12"
+    if [ "$completed" -eq 12 ]; then
         echo "Congratulations! You've completed all challenges!"
     fi
 }
@@ -76,7 +79,7 @@ case "$1" in
     "progress")
         show_progress
         ;;
-    [0-8])
+    [0-9]|1[0-2])
         if [ -z "$2" ]; then
             echo "Usage: verify [challenge_number] [flag]"
             exit 1
@@ -115,7 +118,7 @@ cat > /etc/motd << 'EOFMOTD'
 |  Learn To Cloud - Linux Command Line CTF    |
 +==============================================+
 
-Welcome! Here are 8 Progressive Linux Challenges.
+Welcome! Here are 12 Progressive Linux Challenges.
 Refer to the readme for information on each challenge.
 
 Once you find a flag, use our verify tool to check your answer
@@ -178,6 +181,43 @@ echo "CTF{ssh_security_master}" | sudo tee /home/ctf_user/.ssh/secrets/backup/.a
 sudo chown -R ctf_user:ctf_user /home/ctf_user/.ssh
 sudo chmod 700 /home/ctf_user/.ssh
 sudo chmod 600 /home/ctf_user/.ssh/secrets/backup/.authorized_keys
+
+# Challenge 9: DNS troubleshooting
+sudo cp /etc/resolv.conf /etc/resolv.conf.bak
+sudo sed -i '/^nameserver/s/$/CTF{dns_name}/' /etc/resolv.conf
+
+# Challenge 10: Remote upload
+cat > /usr/local/bin/monitor_directory.sh << 'EOF'
+#!/bin/bash
+DIRECTORY="/home/ctf_user/ctf_challenges"
+inotifywait -m -e create --format '%f' "$DIRECTORY" | while read FILE
+do
+    echo "A new file named $FILE has been added to $DIRECTORY. Here is your flag: CTF{network_copy}" | wall
+done
+EOF
+
+sudo chmod +x /usr/local/bin/monitor_directory.sh
+sudo nohup /usr/local/bin/monitor_directory.sh > /var/log/monitor_directory.log 2>&1 &
+
+# Challenge 11: Web Configuration
+sudo mkdir -p /var/www/html
+echo '<h2 style="text-align:center;">Flag value: CTF{web_config}</h2>' | sudo tee /var/www/html/index.html
+sudo sed -i 's/listen 80 default_server;/listen 8083 default_server;/' /etc/nginx/sites-available/default
+sudo sed -i 's/listen \[::\]:80 default_server;/listen \[::\]:8083 default_server;/' /etc/nginx/sites-available/default
+
+sudo systemctl restart nginx
+
+# Challenge 12: Network traffic analysis
+sudo cat > /usr/local/bin/ping_message.sh << 'EOF'
+#!/bin/bash
+while true; do
+    ping -p 4354467b4e65745f436861747d -c 1 127.0.0.1
+    sleep 1
+done
+EOF
+
+sudo chmod +x /usr/local/bin/ping_message.sh
+sudo nohup /usr/local/bin/ping_message.sh > /var/log/ping_message.log 2>&1 &
 
 # Set permissions
 sudo chown -R ctf_user:ctf_user /home/ctf_user/ctf_challenges

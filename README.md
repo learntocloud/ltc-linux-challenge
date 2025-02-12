@@ -91,6 +91,36 @@ Configure SSH key authentication and find a hidden flag.
 - **Skills**: SSH configuration, key management, security practices
 - **Hint**: Pay attention to file permissions and hidden directories
 
+### Networking tasks 
+
+#### Challenge 9: DNS troubleshooting
+
+DNS troubleshooting is an important skill, fix the issue and find the flag.
+
+- **Skills**: DNS troubleshooting, file editing
+- **Hints**: Consider DNS resolution (google.com), fix anything out of the ordinary, backup.
+
+#### Challenge 10: Remote upload
+
+Use a remote transfer application to transfer a file to the `ctf_challenges` directory and receive your flag 
+
+- **Skills**: Upload files to remote servers
+- **Hints**: scp, CyberDuck, WINscp
+
+#### Challenge 11: Web Configuration
+
+Find and fix the issue, access the site from your local browser by using the provided IP from Terraform. 
+
+- **Skills**: Webhost configuration, service file config, website hosting
+- **Hints**: Consider Local common config Ports (80,443, etc), restart the service after applying changes, no need to modify the Provider Network rules, this is only OS troubleshooting.
+
+#### Challenge 12: Network Traffic Analysis
+
+Use network capture tools to review generated network traffic and find its flag in the sent message.
+
+- **Skills**: Network dumps, packet inspection, decoding
+- **Hint**: Use previous tactics plus a new one `xxd`, you can also use flags `-X` with a certain tool, "there is nothing like home."
+
 ## Tips for Success
 
 1. Use `man` pages to understand command options
